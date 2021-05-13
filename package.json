@@ -1,0 +1,16 @@
+{
+  "name": "nvc",
+  "version": "0.1.0",
+  "main": "index.js",
+  "author": "nightpool@cybre.space",
+  "license": "MIT",
+  "dependencies": {
+    "bufferutil": "^4.0.3",
+    "discord.js": "discordjs/discord.js",
+    "dotenv": "^9.0.2",
+    "erlpack": "discord/erlpack",
+    "front-matter": "^4.0.2",
+    "utf-8-validate": "^5.0.5",
+    "zlib-sync": "^0.1.7"
+  }
+}
