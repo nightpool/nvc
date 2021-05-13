@@ -70,14 +70,14 @@ client.on('interaction', event => {
 
   let body = command.body;
   body = body.replace(/@name\b/g, event.member);
-  command.options.forEach(option => {
-    if (option.name === "person2") {
-      body = body.replace(/@name2\b/g, option.member);
-      mentions.push(option.member.id);
-    } else if (option.name === "thought") {
-      body = body.replace("[text]", option.value);
-    }
-  });
+  // command.options.forEach(option => {
+  //   if (option.name === "person2") {
+  //     body = body.replace(/@name2\b/g, option.member);
+  //     mentions.push(option.member.id);
+  //   } else if (option.name === "thought") {
+  //     body = body.replace("[text]", option.value);
+  //   }
+  // });
 
   event.reply(body, {
     allowedMentions: {
