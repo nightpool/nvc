@@ -4,7 +4,7 @@ description: When you have a perspective that you feel is important and not bein
 params: [thought, potential_user]
 ---
 
-So, as I understand it, @name is suggesting there’s a perspective that wasn’t previously considered here, that might change the conversation a little: [thought]
+So, as I understand it, @name is suggesting there’s a perspective that wasn’t previously considered here, that might change the conversation a little: "[thought]"
 
 It would be kind if everyone seeing this paused for a few moments to give those who are willing space to consider this thought.
 

@@ -2,7 +2,7 @@ require('dotenv').config()
 
 const fs = require('fs');
 const fm = require('front-matter');
-const indexBy = require('lodash/indexBy');
+const keyBy = require('lodash/keyBy');
 
 const { Client, Intents } = require('discord.js');
 const client = new Client({intents: [Intents.GUILDS]});
@@ -46,7 +46,7 @@ const param = (type, description) => ({
   whomst: {
     name: 'who',
     description,
-    type: 'CHOICE',
+    type: 'STRING',
     required: false,
     choices: choiceList([
       'jenna',
@@ -80,7 +80,7 @@ client.on('interaction', event => {
 
   const command = commands[event.commandName];
   const mentions = [event.member.id];
-  const options = indexBy(event.options, 'name');
+  const options = keyBy(event.options, 'name');
 
   const template = command.body;
   let body = '';
@@ -88,12 +88,11 @@ client.on('interaction', event => {
   const blocks = {
     user: options.person2,
     no_user: !options.person2,
-    jenna: options.whomst.value === 'jenna',
-    mods: options.whomst.value === 'mods',
+    jenna: options.who?.value === 'jenna',
+    mods: options.who?.value === 'mods',
   }
 
-  let blockMatched = true;
-  const blockHeaders = [...template.matchAll(/^\[(\w+)\]$\n?/gm)];
+  const blockHeaders = [...template.matchAll(/\n?^\[(\w+)\]$\n?/gm)];
   if (blockHeaders) {
     const initialString = template.substring(0, blockHeaders[0].index);
     body += initialString;
@@ -108,7 +107,7 @@ client.on('interaction', event => {
       }
 
       if (blocks[blockName]) {
-        const blockBody = template.substring(match.index + header.length, nextMatch?.length);
+        const blockBody = template.substring(match.index + header.length, nextMatch?.index);
         body += blockBody;
       }
     }
@@ -117,14 +116,16 @@ client.on('interaction', event => {
   }
 
   body = body.replace(/@name\b/g, event.member);
-  command.options.forEach(option => {
-    if (option.name === "person2") {
-      body = body.replace(/@name2\b/g, option.member);
-      mentions.push(option.member.id);
-    } else if (option.name === 'thought') {
-      body = body.replace("[thought]", option.value);
-    }
-  });
+
+  if (options.person2) {
+    const {member} = options.person2;
+    body = body.replace(/@name2\b/g, member);
+    mentions.push(member.id);
+  }
+
+  if (options.thought) {
+    body = body.replace("[thought]", options.thought.value);
+  }
 
   event.reply(body, {
     allowedMentions: {
