@@ -1,6 +1,6 @@
 ---
 title: unmet needs
-description: "\xa0"
+description: when you’ve noticed a need of yours that is going unmet
 ---
 ...
 

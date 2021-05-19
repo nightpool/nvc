@@ -1,6 +1,6 @@
 ---
 title: not up for this
-description: For when you’re not up for doing NVC stuff.
+description: When you’re not up for what you feel socially obligated to do here
 aliases: [quit]
 ---
  

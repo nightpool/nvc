@@ -2,6 +2,7 @@ require('dotenv').config()
 
 const fs = require('fs');
 const fm = require('front-matter');
+const indexBy = require('lodash/indexBy');
 
 const { Client, Intents } = require('discord.js');
 const client = new Client({intents: [Intents.GUILDS]});
@@ -21,6 +22,8 @@ const commands = Object.fromEntries(fs.readdirSync('./commands').flatMap(fileNam
   }]));
 }));
 
+const choiceList = (list) => list.map(i => ({name: i, value: i}));
+
 const param = (type, description) => ({
   user: {
     name: 'person2',
@@ -39,6 +42,16 @@ const param = (type, description) => ({
     description,
     type: 'STRING',
     required: true
+  },
+  whomst: {
+    name: 'who',
+    description,
+    type: 'CHOICE',
+    required: false,
+    choices: choiceList([
+      'jenna',
+      'mods',
+    ])
   }
 })[type];
 
@@ -67,17 +80,51 @@ client.on('interaction', event => {
 
   const command = commands[event.commandName];
   const mentions = [event.member.id];
+  const options = indexBy(event.options, 'name');
 
-  let body = command.body;
+  const template = command.body;
+  let body = '';
+
+  const blocks = {
+    user: options.person2,
+    no_user: !options.person2,
+    jenna: options.whomst.value === 'jenna',
+    mods: options.whomst.value === 'mods',
+  }
+
+  let blockMatched = true;
+  const blockHeaders = [...template.matchAll(/^\[(\w+)\]$\n?/gm)];
+  if (blockHeaders) {
+    const initialString = template.substring(0, blockHeaders[0].index);
+    body += initialString;
+
+    for (var i = 0; i < blockHeaders.length; i++) {
+      const match = blockHeaders[i];
+      const [header, blockName] = match;
+      const nextMatch = blockHeaders[i + 1];
+
+      if (!blockName in blocks) {
+        console.log(`missing block ${blockName}`);
+      }
+
+      if (blocks[blockName]) {
+        const blockBody = template.substring(match.index + header.length, nextMatch?.length);
+        body += blockBody;
+      }
+    }
+  } else {
+    body += template;
+  }
+
   body = body.replace(/@name\b/g, event.member);
-  // command.options.forEach(option => {
-  //   if (option.name === "person2") {
-  //     body = body.replace(/@name2\b/g, option.member);
-  //     mentions.push(option.member.id);
-  //   } else if (option.name === "thought") {
-  //     body = body.replace("[text]", option.value);
-  //   }
-  // });
+  command.options.forEach(option => {
+    if (option.name === "person2") {
+      body = body.replace(/@name2\b/g, option.member);
+      mentions.push(option.member.id);
+    } else if (option.name === 'thought') {
+      body = body.replace("[thought]", option.value);
+    }
+  });
 
   event.reply(body, {
     allowedMentions: {
