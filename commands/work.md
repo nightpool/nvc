@@ -4,6 +4,6 @@ description: For when the work you’re doing creating something here is going w
 aliases: [pleasant, pleasant work]
 ---
 
-Yay! ^_^
+Yay! ^\_^
 
-It matters to Jenna that you’re here, working on stuff. ^_^
+It matters to Jenna that you’re here, working on stuff. ^\_^
