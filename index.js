@@ -152,10 +152,12 @@ async function handleMessage(message) {
 
     if (lookForArgs.user || lookForArgs.potential_user) {
       const firstMention = message.mentions.users.first();
-      options.person2 = firstMention && {
-        member: firstMention,
-      };
-      args = args.replace(new RegExp(` *<@!?${firstMention.id}> *`), '');
+      if (firstMention) {
+        options.person2 = {
+          member: firstMention,
+        };
+        args = args.replace(new RegExp(` *<@!?${firstMention.id}> *`), '');
+      }
     }
 
     if (lookForArgs.thought) {
@@ -182,7 +184,7 @@ async function handleMessage(message) {
       allowedMentions,
     });
     await message.channel.stopTyping();
-    console.log(reply);
+    console.log(reply.id);
   }
 }
 

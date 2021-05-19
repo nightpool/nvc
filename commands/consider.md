@@ -4,12 +4,15 @@ description: When you have a perspective that you feel is important and not bein
 params: [thought, potential_user]
 ---
 
-So, as I understand it, @name is suggesting there’s a perspective that wasn’t previously considered here, that might change the conversation a little: "[thought]"
+So, as I understand it, @name would like to suggest a perspective we haven't considered here yet:
 
-It would be kind if everyone seeing this paused for a few moments to give those who are willing space to consider this thought.
+    **[thought]**
 
+
+[no_user]
+It would be kind to pause and process for a moment before picking up the conversation and continuing on.
 
 [user]
-@name2, if you have thoughts or a response, you may offer them in good faith.
-
-If you don’t know how to respond to this, it is sufficient to take a moment or two to reflect on it, then acknowledge that you’ve heard it (e.g., “cool,” “sure thing,” “sorry,” “fair point,” “noted,”) and move on.
+It'd be kind to pause and process a moment before continuing the conversation.
+    @name2, if you have thoughts or a response, you may offer them in good faith.
+    ... if you don’t know how to respond, it's enough to take a moment to reflect; acknowledge that you’ve heard it (e.g., “cool,” "sorry," “fair point."); and, move on.
