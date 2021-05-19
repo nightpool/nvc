@@ -8,6 +8,7 @@ So, as I understand it, @name is suggesting there’s a perspective that wasn’
 
 It would be kind if everyone seeing this paused for a few moments to give those who are willing space to consider this thought.
 
+
 [user]
 @name2, if you have thoughts or a response, you may offer them in good faith.
 

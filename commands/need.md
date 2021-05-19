@@ -7,6 +7,7 @@ params: [potential_user]
 
 Brief pause:
 
+
 [no_user]
 @name thinks @name has identified a need of theirs. @name, if it’s relevant to the conversation, and an appropriate thing to say, and you’re up for talking about it, could you describe the needs behind your feelings ... and possibly even make a request?
 

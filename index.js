@@ -3,20 +3,28 @@ require('dotenv').config()
 const fs = require('fs');
 const fm = require('front-matter');
 const keyBy = require('lodash/keyBy');
+const uniqBy = require('lodash/uniqBy');
+const {stripIndents} = require('common-tags');
+const {Client, Intents} = require('discord.js');
+const {formatMessage} = require('./formatting');
 
-const { Client, Intents } = require('discord.js');
-const client = new Client({intents: [Intents.GUILDS]});
+const client = new Client({
+  intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
+  allowedMentions: {
+    parse: [],
+  },
+});
 client.on('debug', console.log);
-
 
 const commands = Object.fromEntries(fs.readdirSync('./commands').flatMap(fileName => {
   const file = fs.readFileSync(`commands/${fileName}`, 'utf8');
   const commandName = fileName.replace(/.md$/, '');
   const command = fm(file);
   const {aliases} = command.attributes;
-  const names = [commandName].concat(aliases || []); 
+  command.attributes.name = commandName;
+  const commandsAndAliases = [commandName].concat(aliases || []);
 
-  return names.map(n => ([n, {
+  return commandsAndAliases.map(commandName => ([commandName, {
     ...command.attributes,
     body: command.body
   }]));
@@ -24,6 +32,7 @@ const commands = Object.fromEntries(fs.readdirSync('./commands').flatMap(fileNam
 
 const choiceList = (list) => list.map(i => ({name: i, value: i}));
 
+const NOT_AFRAID_OF_LIST = ['jenna', 'mods'];
 const param = (type, description) => ({
   user: {
     name: 'person2',
@@ -43,15 +52,12 @@ const param = (type, description) => ({
     type: 'STRING',
     required: true
   },
-  whomst: {
+  afraid_of: {
     name: 'who',
     description,
     type: 'STRING',
     required: false,
-    choices: choiceList([
-      'jenna',
-      'mods',
-    ])
+    choices: choiceList(NOT_AFRAID_OF_LIST)
   }
 })[type];
 
@@ -70,69 +76,115 @@ client.once('ready', () => {
       }),
     };
   });
-
-  console.log(commandSet);
   ninuan.commands.set(commandSet);
 });
 
-client.on('interaction', event => {
+client.on('interaction', (event) => {
   if (!event.isCommand()) return;
 
   const command = commands[event.commandName];
-  const mentions = [event.member.id];
   const options = keyBy(event.options, 'name');
 
-  const template = command.body;
-  let body = '';
-
-  const blocks = {
-    user: options.person2,
-    no_user: !options.person2,
-    jenna: options.who?.value === 'jenna',
-    mods: options.who?.value === 'mods',
-  }
-
-  const blockHeaders = [...template.matchAll(/\n?^\[(\w+)\]$\n?/gm)];
-  if (blockHeaders) {
-    const initialString = template.substring(0, blockHeaders[0].index);
-    body += initialString;
-
-    for (var i = 0; i < blockHeaders.length; i++) {
-      const match = blockHeaders[i];
-      const [header, blockName] = match;
-      const nextMatch = blockHeaders[i + 1];
-
-      if (!blockName in blocks) {
-        console.log(`missing block ${blockName}`);
-      }
-
-      if (blocks[blockName]) {
-        const blockBody = template.substring(match.index + header.length, nextMatch?.index);
-        body += blockBody;
-      }
-    }
-  } else {
-    body += template;
-  }
-
-  body = body.replace(/@name\b/g, event.member);
-
-  if (options.person2) {
-    const {member} = options.person2;
-    body = body.replace(/@name2\b/g, member);
-    mentions.push(member.id);
-  }
-
-  if (options.thought) {
-    body = body.replace("[thought]", options.thought.value);
-  }
+  const {body, allowedMentions} = formatMessage({
+    template: command.body,
+    user: event.member,
+    options,
+  })
 
   event.reply(body, {
-    allowedMentions: {
-      users: mentions
-    }
+    allowedMentions,
   });
-})
+});
+
+const commandRegex = new RegExp(`^!(${Object.keys(commands).join("|")})`);
+const helpRegex = /^!help(?: ([\w+_-]+))?/
+
+client.on('message', message => handleMessage(message).catch(error => console.error(error)));
+
+async function handleMessage(message) {
+  if (helpRegex.test(message)) {
+    const [_, commandName] = helpRegex.exec(message);
+    if (commandName) {
+      const command = commands[commandName];
+      let usage = `!${command.name}`;
+      command.params.forEach(param => {
+        if (param === 'user') {
+          usage += ' @name';
+        } else if (param === 'potential_user') {
+          usage = [usage, `   ${usage} @name`].join("\n");
+        } else if (param === 'thought') {
+          usage += ' thought';
+        } else if (param === 'afraid_of') {
+          usage = [
+            usage,
+            ...NOT_AFRAID_OF_LIST.map(i => ['  ', usage, i].join(" "))
+          ].join("\n");
+        }
+      });
+      message.channel.send(stripIndents`
+        **${command.title}**
+        _${command.description}_
+
+        Usage: ${usage}
+        ${command.aliases ? `Aliases: ${command.aliases.map(i => '!' + i).join(", ")}\n` : ''
+        }
+        What happens:
+        ${command.body.split("\n").map(line => '> ' + line).join("\n")}`
+      );
+    } else {
+      const mainCommands = uniqBy(Object.values(commands), 'name');
+      message.channel.send(`Available commands:\n${
+        mainCommands.map(c => `!${c.name} ${
+          c.aliases ? `(or ${c.aliases.join(", or ")})` : ''
+        }`).join('\n')
+      }`);
+    }
+  }
+
+  if (commandRegex.test(message)) {
+    message.channel.startTyping();
+    const [prefix, commandName] = commandRegex.exec(message);
+    const command = commands[commandName];
+    const options = {};
+
+    const lookForArgs = keyBy(command.params, i => i);
+    let args = message.content.substring(prefix.length);
+
+    if (lookForArgs.user || lookForArgs.potential_user) {
+      const firstMention = message.mentions.users.first();
+      options.person2 = firstMention && {
+        member: firstMention,
+      };
+      args = args.replace(new RegExp(` *<@!?${firstMention.id}> *`), '');
+    }
+
+    if (lookForArgs.thought) {
+      options.thought = {
+        value: args.replace(/^\s+/, ''),
+      };
+    }
+
+    if (lookForArgs.afraid_of) {
+      NOT_AFRAID_OF_LIST.forEach(person => {
+        if (new RegExp(`\\b${person}\\b`).test(args)) {
+          options.who = {value: person};
+        }
+      });
+    }
+
+    const {body, allowedMentions} = formatMessage({
+      template: command.body,
+      user: message.author,
+      options,
+    });
+
+    const reply = await message.channel.send(body, {
+      allowedMentions,
+    });
+    await message.channel.stopTyping();
+    console.log(reply);
+  }
+}
 
 
 client.login(process.env.BOT_TOKEN);
