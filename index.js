@@ -69,7 +69,7 @@ client.once('ready', () => {
     const {params, aliases, description} = command;
 
     return {
-      name,
+      name: name.replaceAll(' ', '-'),
       description,
       ...(params && {
         options: params.map(p => param(p, description)),
@@ -79,10 +79,10 @@ client.once('ready', () => {
   ninuan.commands.set(commandSet);
 });
 
-client.on('interaction', (event) => {
+client.on('interaction', async (event) => {
   if (!event.isCommand()) return;
 
-  const command = commands[event.commandName];
+  const command = commands[event.commandName.replaceAll('-', ' ')];
   const options = keyBy(event.options, 'name');
 
   const {body, allowedMentions} = formatMessage({
@@ -97,7 +97,7 @@ client.on('interaction', (event) => {
 });
 
 const commandRegex = new RegExp(`^!(${Object.keys(commands).join("|")})`);
-const helpRegex = /^!help(?: ([\w+_-]+))?/
+const helpRegex = /^!help(?: ([\w+_\- ]+))?/
 
 client.on('message', message => handleMessage(message).catch(error => console.error(error)));
 
@@ -105,9 +105,9 @@ async function handleMessage(message) {
   if (helpRegex.test(message)) {
     const [_, commandName] = helpRegex.exec(message);
     if (commandName) {
-      const command = commands[commandName];
+      const command = commands[commandName] || commands[commandName.replaceAll('-', ' ')];
       let usage = `!${command.name}`;
-      command.params.forEach(param => {
+      command.params && command.params.forEach(param => {
         if (param === 'user') {
           usage += ' @name';
         } else if (param === 'potential_user') {
@@ -144,7 +144,7 @@ async function handleMessage(message) {
   if (commandRegex.test(message)) {
     message.channel.startTyping();
     const [prefix, commandName] = commandRegex.exec(message);
-    const command = commands[commandName];
+    const command = commands[commandName] || commands[commandName.replaceAll('-', ' ')];
     const options = {};
 
     const lookForArgs = keyBy(command.params, i => i);

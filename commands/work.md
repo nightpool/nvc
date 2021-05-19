@@ -1,7 +1,7 @@
 ---
 title: pleasant work
 description: For when the work you’re doing creating something here is going well and pleasantly.
-aliases: [pleasant, pleasant-work]
+aliases: [pleasant, pleasant work]
 ---
 
 Yay! ^_^

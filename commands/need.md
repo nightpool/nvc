@@ -1,7 +1,7 @@
 ---
 title: need spotted!
 description: For when you think you’ve understood the need behind what you or what someone else is saying.
-aliases: [need-spotted]
+aliases: [need spotted]
 params: [potential_user]
 --- 
 
