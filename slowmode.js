@@ -6,7 +6,7 @@ const lastMessageTimestamp = new Map();
 
 const messageHandler = (message) => {
   const {member, channel} = message;
-  if (!member || !channel.rateLimitPerUser || message.user.bot) {
+  if (!member || !channel.rateLimitPerUser || message.author.bot) {
     return;
   }
 
