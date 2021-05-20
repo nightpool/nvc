@@ -7,6 +7,7 @@ const uniqBy = require('lodash/uniqBy');
 const {stripIndents} = require('common-tags');
 const {Client, Intents} = require('discord.js');
 const {formatMessage} = require('./formatting');
+const {messageHandler: checkForSlowModeBypass} = require('./slowmode');
 
 const client = new Client({
   intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
@@ -15,6 +16,7 @@ const client = new Client({
   },
 });
 client.on('debug', console.log);
+client.on('message', checkForSlowModeBypass);
 
 const commands = Object.fromEntries(fs.readdirSync('./commands').flatMap(fileName => {
   const file = fs.readFileSync(`commands/${fileName}`, 'utf8');
@@ -97,7 +99,7 @@ client.on('interaction', async (event) => {
 });
 
 const commandRegex = new RegExp(`^!(${Object.keys(commands).join("|")})`);
-const helpRegex = /^!help(?: ([\w+_\- ]+))?/
+const helpRegex = /^!help(?: !?([\w+_\- ]+))?/
 
 client.on('message', message => handleMessage(message).catch(error => console.error(error)));
 
