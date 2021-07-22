@@ -20,6 +20,12 @@ const messageHandler = (message) => {
       }
     }
 
+    const reaction = message.react('🕐');
+
+    setTimeout(async () => {
+      (await reaction).users.remove(/* client.user */);
+    }, channel.rateLimitPerUser * 1000);
+
     lastMessageTimestamp.set(key, message.createdTimestamp);
   }
 }
