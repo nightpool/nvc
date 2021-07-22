@@ -1,12 +1,16 @@
-const {Permissions} = require('discord.js');
+const {Permissions, } = require('discord.js');
 
 const bypassSlowmode = Permissions.FLAGS.MANAGE_MESSAGES | Permissions.FLAGS.MANAGE_CHANNELS;
+const slowModeMessageTypes = new Set(['DEFAULT', 'REPLY', 'APPLICATION_COMMAND']);
 
 const lastMessageTimestamp = new Map();
 
 const messageHandler = (message) => {
   const {member, channel} = message;
-  if (!member || !channel.rateLimitPerUser || message.author.bot) {
+  if (!member || !channel.rateLimitPerUser) {
+    return;
+  }
+  if (message.author.bot || !slowModeMessageTypes.has(message.type)) {
     return;
   }
 
